@@ -1,0 +1,17 @@
+{
+  "name": "angular-authentication-drill",
+  "description": "",
+  "main": "gulpfile.js",
+  "authors": [
+    "matan <rahavmatan@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
