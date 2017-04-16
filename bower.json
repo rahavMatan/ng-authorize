@@ -13,5 +13,11 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "devDependencies": {
+    "angular": "^1.6.4",
+    "angular-ui-router": "ui-router#1.x.x",
+    "angular-cookies": "^1.6.4",
+    "bootstrap": "4"
+  }
 }
