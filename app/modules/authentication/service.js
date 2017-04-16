@@ -1,14 +1,3 @@
-angular.module('Authentication', []);
-angular.module('Home', []);
-angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
-.controller('authCtrl',function($scope, AuthenticationService){
-  $scope.encoded;
-  this.encode = function(input){
-    var keyStr = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='];
-    $scope.encoded = AuthenticationService.encode(input);
-  }
-})
-
 angular.module('Authentication')
 .service('AuthenticationService',function(Base64){
   this.encode=function(input){
