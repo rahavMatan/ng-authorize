@@ -17,7 +17,14 @@
       <p>
         {{encoded}}
       </p>
+      <hr />
+      <input type="text" ng-model="encodedInput" />
+      <button ng-click="ctrl.decode(encoded)">decode from base64</button>
+      <p>
+        {{decoded}}
+      </p>
 
     </div>
+
   </body>
 </html>
