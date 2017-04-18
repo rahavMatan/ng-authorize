@@ -1,24 +1,47 @@
 angular.module('Authentication', []);
 angular.module('Home', []);
 angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
-.controller('authCtrl',function($scope, AuthenticationService){
-  $scope.encoded;
-  $scope.encodedInput;
-  this.encode = function(input){
-    $scope.encoded = AuthenticationService.encode(input);
-  }
-  this.decode=function(input){
-    $scope.decoded = AuthenticationService.decode(input);
-  }
+.run(function($rootScope, $location, $cookieStore, $http){
+  $http.defaults.headers.common['Auth-Token'] = 'login YmVlcDpi';
+  $rootScope.user = { username: 'username', authenticationid:'id'};
+  //Setting Cookie
+  $cookieStore.put( 'yourmodule', $rootScope.user );
+
 })
 
 angular.module('Authentication')
-.service('AuthenticationService',function(Base64){
-  this.encode=function(input){
-    return Base64.encode(input);
-  }
-  this.decode=function(input){
-    return Base64.decode(input);
+.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout){
+  var service ={};
+  service.Login = function (username, password, callback) {
+
+      /* Dummy authentication for testing, uses $timeout to simulate api call
+       ----------------------------------------------*/
+      $timeout(function () {
+          var response = { success: username === 'test' && password === 'test' };
+          if (!response.success) {
+              response.message = 'Username or password is incorrect';
+          }
+          callback(response);
+      }, 1000);
+
+
+      /* Use this for real authentication
+       ----------------------------------------------*/
+      //$http.post('/api/authenticate', { username: username, password: password })
+      //    .success(function (response) {
+      //        callback(response);
+      //    });
+
+  };
+  service.SetCredentials = function(username,password){
+    var authdata = Base64.encode(username+':'+password);
+    $rootscope.globas = {
+      currentUser:{
+        username:username,
+        authdata:authdata
+      }
+    }
+
   }
 })
 .factory('Base64',function(){

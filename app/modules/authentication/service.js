@@ -1,10 +1,36 @@
 angular.module('Authentication')
-.service('AuthenticationService',function(Base64){
-  this.encode=function(input){
-    return Base64.encode(input);
-  }
-  this.decode=function(input){
-    return Base64.decode(input);
+.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout){
+  var service ={};
+  service.Login = function (username, password, callback) {
+
+      /* Dummy authentication for testing, uses $timeout to simulate api call
+       ----------------------------------------------*/
+      $timeout(function () {
+          var response = { success: username === 'test' && password === 'test' };
+          if (!response.success) {
+              response.message = 'Username or password is incorrect';
+          }
+          callback(response);
+      }, 1000);
+
+
+      /* Use this for real authentication
+       ----------------------------------------------*/
+      //$http.post('/api/authenticate', { username: username, password: password })
+      //    .success(function (response) {
+      //        callback(response);
+      //    });
+
+  };
+  service.SetCredentials = function(username,password){
+    var authdata = Base64.encode(username+':'+password);
+    $rootscope.globas = {
+      currentUser:{
+        username:username,
+        authdata:authdata
+      }
+    }
+
   }
 })
 .factory('Base64',function(){

@@ -1,13 +1,10 @@
 angular.module('Authentication', []);
 angular.module('Home', []);
 angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
-.controller('authCtrl',function($scope, AuthenticationService){
-  $scope.encoded;
-  $scope.encodedInput;
-  this.encode = function(input){
-    $scope.encoded = AuthenticationService.encode(input);
-  }
-  this.decode=function(input){
-    $scope.decoded = AuthenticationService.decode(input);
-  }
+.run(function($rootScope, $location, $cookieStore, $http){
+  $http.defaults.headers.common['Auth-Token'] = 'login YmVlcDpi';
+  $rootScope.user = { username: 'username', authenticationid:'id'};
+  //Setting Cookie
+  $cookieStore.put( 'yourmodule', $rootScope.user );
+
 })
