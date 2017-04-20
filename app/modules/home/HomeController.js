@@ -1,6 +1,19 @@
 angular.module('Home')
-.controller('HomeController',function($scope,AuthenticationService){
+.controller('HomeController',function($scope,AuthenticationService, UserService){
   $scope.logout=function(){
     AuthenticationService.ClearCredentials();
+  }
+  $scope.GetUsers=function(){
+    UserService.GetAll()
+    .then(function(users){
+      $scope.users=users;
+    })
+  }
+  $scope.GetUsers();
+  $scope.deleteUser=function(id){
+    UserService.delete(id)
+    .then(function(){
+      $scope.GetUsers();
+    })
   }
 })

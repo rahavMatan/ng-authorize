@@ -39,6 +39,26 @@ angular.module('authApp',['Authentication','Home','registration','ui.router','ng
   });
 })
 
+angular.module('Home')
+.controller('HomeController',function($scope,AuthenticationService, UserService){
+  $scope.logout=function(){
+    AuthenticationService.ClearCredentials();
+  }
+  $scope.GetUsers=function(){
+    UserService.GetAll()
+    .then(function(users){
+      $scope.users=users;
+    })
+  }
+  $scope.GetUsers();
+  $scope.deleteUser=function(id){
+    UserService.delete(id)
+    .then(function(){
+      $scope.GetUsers();
+    })
+  }
+})
+
 angular.module('Authentication')
 .controller('LoginController', function($scope, $rootScope, $state, AuthenticationService){
   //AuthenticationService.ClearCredentials();
@@ -62,26 +82,21 @@ angular.module('Authentication')
 .factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout,UserService){
   var service ={};
   service.Login = function (username, password, callback) {
-
-      /* Dummy authentication for testing, uses $timeout to simulate api call
-       ----------------------------------------------*/
-      $timeout(function () {
-          var response = { success: username === 'test' && password === 'test' };
-          if (!response.success) {
-              response.message = 'Username or password is incorrect';
+    $timeout(function () {
+      var response;
+      UserService.GetByUsername(username)
+        .then(function(user){
+          if(user !== null && user.password == password){
+            response = {success:true};
+          } else {
+            response = {success:false, message: 'username or password is incorrect'};
           }
           callback(response);
-      }, 1000);
+        })
 
-
-      /* Use this for real authentication
-       ----------------------------------------------*/
-      //$http.post('/api/authenticate', { username: username, password: password })
-      //    .success(function (response) {
-      //        callback(response);
-      //    });
-
+    }, 1000);
   };
+
   service.SetCredentials = function(username,password){
     var authdata = Base64.encode(username+':'+password);
     $rootScope.globals = {
@@ -161,19 +176,13 @@ angular.module('Authentication')
   }
 })
 
-angular.module('Home')
-.controller('HomeController',function($scope,AuthenticationService){
-  $scope.logout=function(){
-    AuthenticationService.ClearCredentials();
-  }
-})
-
 angular.module('registration')
 .controller('registrationController',function($scope,UserService, $state, $rootScope){
   $scope.register = function(){
     $scope.dataLoading=true;
     UserService.create($scope.user)
     .then(function(response){
+      console.log(response);
       if(response.success){
         $state.go('login');
       } else {
@@ -187,6 +196,7 @@ angular.module('registration')
 angular.module('registration')
 .service('UserService',function($timeout, $filter, $q){
   var service={};
+  service.GetUsers = GetUsers;
   function GetUsers(){
     if(!localStorage.users){
       localStorage.users=JSON.stringify([]);
@@ -210,25 +220,32 @@ angular.module('registration')
   }
   service.GetByUsername=function(username){
     var deferred=$q.defer();
-    var filtered = $filter('$filter')(GetUsers(),{username:username});
+    var filtered = $filter('filter')(GetUsers(),{username:username});
     var user = filtered.length ? filtered[0] : null;
+    console.log(user);
     deferred.resolve(user);
     return deferred.promise;
   }
   service.create=function(user){
-    console.log(user);
+    var self=this;
     var deferred = $q.defer();
     $timeout(function(){
-      GetByUsername(user.username)
+      self.GetByUsername(user.username)
       .then(function(existingUser){
         if(existingUser !== null){
           deferred.resolve({success:false,
-            message: 'Username "' + user.username + '" is already taken'});
+                            message: 'Username "' + user.username + '" is already taken'});
         } else {
           var users=GetUsers();
+          var lastUser = users[users.length-1] || {id:0};
+          user.id = lastUser.id+1;
+          users.push(user);
+          setUsers(users);
+          deferred.resolve({success:true});
         }
       })
     },1000)
+    return deferred.promise;
   }
   service.update=function(user){
     var deferred = $q.defer();

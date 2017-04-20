@@ -4,6 +4,7 @@ angular.module('registration')
     $scope.dataLoading=true;
     UserService.create($scope.user)
     .then(function(response){
+      console.log(response);
       if(response.success){
         $state.go('login');
       } else {

@@ -1,6 +1,7 @@
 angular.module('registration')
 .service('UserService',function($timeout, $filter, $q){
   var service={};
+  service.GetUsers = GetUsers;
   function GetUsers(){
     if(!localStorage.users){
       localStorage.users=JSON.stringify([]);
@@ -24,25 +25,32 @@ angular.module('registration')
   }
   service.GetByUsername=function(username){
     var deferred=$q.defer();
-    var filtered = $filter('$filter')(GetUsers(),{username:username});
+    var filtered = $filter('filter')(GetUsers(),{username:username});
     var user = filtered.length ? filtered[0] : null;
+    console.log(user);
     deferred.resolve(user);
     return deferred.promise;
   }
   service.create=function(user){
-    console.log(user);
+    var self=this;
     var deferred = $q.defer();
     $timeout(function(){
-      GetByUsername(user.username)
+      self.GetByUsername(user.username)
       .then(function(existingUser){
         if(existingUser !== null){
           deferred.resolve({success:false,
-            message: 'Username "' + user.username + '" is already taken'});
+                            message: 'Username "' + user.username + '" is already taken'});
         } else {
           var users=GetUsers();
+          var lastUser = users[users.length-1] || {id:0};
+          user.id = lastUser.id+1;
+          users.push(user);
+          setUsers(users);
+          deferred.resolve({success:true});
         }
       })
     },1000)
+    return deferred.promise;
   }
   service.update=function(user){
     var deferred = $q.defer();
