@@ -15,6 +15,7 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   })
   $urlRouterProvider.otherwise('/login');
 })
+
 .run(function($rootScope, $state,$transitions, $cookieStore, $http){
   $rootScope.globals= $cookieStore.get('globals') || {};
 
@@ -22,10 +23,10 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
     $http.defaults.headers.common['Authorization'] = 'Basic' + $rootScope.globals.currentUser.authdata;
 
   }
-  console.log($http.defaults.headers);
   $transitions.onStart( {}, function(trans) {
+    //console.log($rootScope.globals.currentUser);
       if(trans.$to().name !== 'login' && !$rootScope.globals.currentUser){
-        console.log('not logged-in, should re direct');
+        return trans.router.stateService.target('login');
       }
   });
 })

@@ -15,6 +15,7 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   })
   $urlRouterProvider.otherwise('/login');
 })
+
 .run(function($rootScope, $state,$transitions, $cookieStore, $http){
   $rootScope.globals= $cookieStore.get('globals') || {};
 
@@ -22,17 +23,31 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
     $http.defaults.headers.common['Authorization'] = 'Basic' + $rootScope.globals.currentUser.authdata;
 
   }
-  console.log($http.defaults.headers);
   $transitions.onStart( {}, function(trans) {
+    //console.log($rootScope.globals.currentUser);
       if(trans.$to().name !== 'login' && !$rootScope.globals.currentUser){
-        console.log('not logged-in, should re direct');
+        return trans.router.stateService.target('login');
       }
   });
 })
 
 angular.module('Authentication')
-.controller('LoginController', function($scope, $rootScope, $location, AuthenticationService){
-  
+.controller('LoginController', function($scope, $rootScope, $state, AuthenticationService){
+  //AuthenticationService.ClearCredentials();
+  $scope.login=function(){
+    AuthenticationService.ClearCredentials();
+    $scope.dataLoading=true;
+    $scope.error = "";
+    AuthenticationService.Login($scope.username, $scope.password,function(response){
+      if(response.success){
+        AuthenticationService.SetCredentials($scope.username, $scope.password);
+        $state.go('home');
+      } else {
+        $scope.error = response.message;
+        $scope.dataLoading = false;
+      }
+    })
+  }
 })
 
 angular.module('Authentication')
@@ -61,13 +76,20 @@ angular.module('Authentication')
   };
   service.SetCredentials = function(username,password){
     var authdata = Base64.encode(username+':'+password);
-    $rootscope.globas = {
+    $rootScope.globals = {
       currentUser:{
         username:username,
         authdata:authdata
       }
     }
+    $http.defaults.headers.common['Authorization'] = 'Basic' + authdata;
+    $cookieStore.put('globals',$rootScope.globals)
 
+  }
+  service.ClearCredentials=function(){
+    $rootScope.globals={};
+    $cookieStore.remove('globals');
+    $http.defaults.headers.common.Authorization='Basic ';
   }
   return service;
 })
@@ -97,7 +119,6 @@ angular.module('Authentication')
 
 
       }
-      console.log(result);
       return result.join("");
     },
     decode:function(input){
@@ -127,13 +148,14 @@ angular.module('Authentication')
         }
 
       }
-      console.log(result);
       return result.join("");
     }
   }
 })
 
 angular.module('Home')
-.controller('HomeController',function($scope){
-  
+.controller('HomeController',function($scope,AuthenticationService){
+  $scope.logout=function(){
+    AuthenticationService.ClearCredentials();
+  }
 })

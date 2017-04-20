@@ -24,13 +24,20 @@ angular.module('Authentication')
   };
   service.SetCredentials = function(username,password){
     var authdata = Base64.encode(username+':'+password);
-    $rootscope.globas = {
+    $rootScope.globals = {
       currentUser:{
         username:username,
         authdata:authdata
       }
     }
+    $http.defaults.headers.common['Authorization'] = 'Basic' + authdata;
+    $cookieStore.put('globals',$rootScope.globals)
 
+  }
+  service.ClearCredentials=function(){
+    $rootScope.globals={};
+    $cookieStore.remove('globals');
+    $http.defaults.headers.common.Authorization='Basic ';
   }
   return service;
 })
@@ -60,7 +67,6 @@ angular.module('Authentication')
 
 
       }
-      console.log(result);
       return result.join("");
     },
     decode:function(input){
@@ -90,7 +96,6 @@ angular.module('Authentication')
         }
 
       }
-      console.log(result);
       return result.join("");
     }
   }
