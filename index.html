@@ -11,20 +11,13 @@
 
   </head>
   <body ng-app="authApp">
-    <div>
-      <input type="text" ng-model="input" />
-      <button ng-click="ctrl.encode(input)">encode 64</button>
-      <p>
-        {{encoded}}
-      </p>
-      <hr />
-      <input type="text" ng-model="encodedInput" />
-      <button ng-click="ctrl.decode(encoded)">decode from base64</button>
-      <p>
-        {{decoded}}
-      </p>
+    <div class="container">
+      <a ui-sref="login">login</a>
+      <a ui-sref='home'>home</a>
+      <div ui-view>
+
+      </div>
 
     </div>
-
   </body>
 </html>
