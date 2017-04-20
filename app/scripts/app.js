@@ -1,12 +1,19 @@
 angular.module('Authentication', []);
 angular.module('Home', []);
-angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
+angular.module('registration',[])
+
+angular.module('authApp',['Authentication','Home','registration','ui.router','ngCookies'])
 .config(function($stateProvider,$urlRouterProvider){
   $stateProvider
   .state('login',{
     url:'/login',
     controller:'LoginController',
     templateUrl:'app\\modules\\authentication\\login.html'
+  })
+  .state('registration',{
+    url:'/registration',
+    controller:'registrationController',
+    templateUrl:'app/modules/registration/registration.html'
   })
   .state('home',{
     url:'/home',
@@ -16,7 +23,7 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   $urlRouterProvider.otherwise('/login');
 })
 
-.run(function($rootScope, $state,$transitions, $cookieStore, $http){
+.run(function($rootScope,$transitions, $cookieStore, $http){
   $rootScope.globals= $cookieStore.get('globals') || {};
 
   if($rootScope.globals.currentUser){
@@ -25,8 +32,9 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   }
   $transitions.onStart( {}, function(trans) {
     //console.log($rootScope.globals.currentUser);
-      if(trans.$to().name !== 'login' && !$rootScope.globals.currentUser){
-        return trans.router.stateService.target('login');
-      }
+    var restrictedPage = ['login','registration'].indexOf(trans.$to().name) === -1;
+    if(restrictedPage && !$rootScope.globals.currentUser){
+      return trans.router.stateService.target('login');
+    }
   });
 })

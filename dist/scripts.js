@@ -1,12 +1,19 @@
 angular.module('Authentication', []);
 angular.module('Home', []);
-angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
+angular.module('registration',[])
+
+angular.module('authApp',['Authentication','Home','registration','ui.router','ngCookies'])
 .config(function($stateProvider,$urlRouterProvider){
   $stateProvider
   .state('login',{
     url:'/login',
     controller:'LoginController',
     templateUrl:'app\\modules\\authentication\\login.html'
+  })
+  .state('registration',{
+    url:'/registration',
+    controller:'registrationController',
+    templateUrl:'app/modules/registration/registration.html'
   })
   .state('home',{
     url:'/home',
@@ -16,7 +23,7 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   $urlRouterProvider.otherwise('/login');
 })
 
-.run(function($rootScope, $state,$transitions, $cookieStore, $http){
+.run(function($rootScope,$transitions, $cookieStore, $http){
   $rootScope.globals= $cookieStore.get('globals') || {};
 
   if($rootScope.globals.currentUser){
@@ -25,9 +32,10 @@ angular.module('authApp',['Authentication','Home','ui.router','ngCookies'])
   }
   $transitions.onStart( {}, function(trans) {
     //console.log($rootScope.globals.currentUser);
-      if(trans.$to().name !== 'login' && !$rootScope.globals.currentUser){
-        return trans.router.stateService.target('login');
-      }
+    var restrictedPage = ['login','registration'].indexOf(trans.$to().name) === -1;
+    if(restrictedPage && !$rootScope.globals.currentUser){
+      return trans.router.stateService.target('login');
+    }
   });
 })
 
@@ -51,7 +59,7 @@ angular.module('Authentication')
 })
 
 angular.module('Authentication')
-.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout){
+.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout,UserService){
   var service ={};
   service.Login = function (username, password, callback) {
 
@@ -158,4 +166,97 @@ angular.module('Home')
   $scope.logout=function(){
     AuthenticationService.ClearCredentials();
   }
+})
+
+angular.module('registration')
+.controller('registrationController',function($scope,UserService, $state, $rootScope){
+  $scope.register = function(){
+    $scope.dataLoading=true;
+    UserService.create($scope.user)
+    .then(function(response){
+      if(response.success){
+        $state.go('login');
+      } else {
+        $scope.msg= response.message;
+        $scope.dataLoading=false;
+      }
+    })
+  }
+})
+
+angular.module('registration')
+.service('UserService',function($timeout, $filter, $q){
+  var service={};
+  function GetUsers(){
+    if(!localStorage.users){
+      localStorage.users=JSON.stringify([]);
+    }
+    return JSON.parse(localStorage.users);
+  }
+  function setUsers(users){
+    localStorage.users = JSON.stringify(users);
+  }
+  service.GetAll=function(){
+    var deferred = $q.defer();
+    deferred.resolve(GetUsers());
+    return deferred.promise;
+  }
+  service.GetById=function(id){
+    var deferred = $q.defer();
+    var filtered = $filter('$filter')(GetUsers(),{id:id});
+    var user = filtered.length?filtered[0]:null;
+    deferred.resolve(user);
+    return deferred.promise;
+  }
+  service.GetByUsername=function(username){
+    var deferred=$q.defer();
+    var filtered = $filter('$filter')(GetUsers(),{username:username});
+    var user = filtered.length ? filtered[0] : null;
+    deferred.resolve(user);
+    return deferred.promise;
+  }
+  service.create=function(user){
+    console.log(user);
+    var deferred = $q.defer();
+    $timeout(function(){
+      GetByUsername(user.username)
+      .then(function(existingUser){
+        if(existingUser !== null){
+          deferred.resolve({success:false,
+            message: 'Username "' + user.username + '" is already taken'});
+        } else {
+          var users=GetUsers();
+        }
+      })
+    },1000)
+  }
+  service.update=function(user){
+    var deferred = $q.defer();
+    var users = GetUsers();
+    for(var i=0;i<user.length;i++){
+      if(users[i].id == user.id){
+          users[i] = user;
+          break;
+      }
+    }
+    setUsers(users);
+    deferred.resolve();
+    return deferred.promise();
+  }
+  service.delete=function(id){
+    var deferred= $q.defer();
+    var users = GetUsers();
+    for (var i = 0; i < users.length; i++) {
+        var user = users[i];
+        if (user.id === id) {
+            users.splice(i, 1);
+            break;
+        }
+    }
+    setUsers(users);
+    deferred.resolve();
+
+    return deferred.promise;
+  }
+  return service;
 })

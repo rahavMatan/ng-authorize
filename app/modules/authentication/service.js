@@ -1,5 +1,5 @@
 angular.module('Authentication')
-.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout){
+.factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout,UserService){
   var service ={};
   service.Login = function (username, password, callback) {
 
