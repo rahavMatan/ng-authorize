@@ -36,11 +36,6 @@ angular.module('Authentication')
 })
 
 angular.module('Authentication')
-.controller('LoginController', function($scope, $rootScope, $location, AuthenticationService){
-  
-})
-
-angular.module('Authentication')
 .factory('AuthenticationService',function(Base64,$http,$cookieStore, $rootScope, $timeout){
   var service ={};
   service.Login = function (username, password, callback) {
